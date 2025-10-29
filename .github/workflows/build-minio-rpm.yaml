@@ -42,4 +42,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: minio-rpm
-          path: output/*.rpm
+          path: output/**
