@@ -16,7 +16,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Set release as an environment variable
+      # Set MinIO release environment variable
       - name: Set MinIO release
         run: echo "MINIO_RELEASE=${{ github.event.inputs.minio_release }}" >> $GITHUB_ENV
 
@@ -29,7 +29,7 @@ jobs:
             -t minio-rpm:latest \
             minio/
 
-      # Create a temporary container to extract the RPM
+      # Extract RPM from container
       - name: Extract RPM package
         run: |
           CONTAINER_ID=$(docker create minio-rpm:latest)
@@ -37,21 +37,15 @@ jobs:
           docker cp $CONTAINER_ID:/build/rpmbuild/RPMS/x86_64/ output/
           docker rm $CONTAINER_ID
 
-      # Create a Git tag for the MinIO release
-      - name: Create Git tag
-        run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
-          git tag -f ${{ github.event.inputs.minio_release }}
-          git push origin ${{ github.event.inputs.minio_release }} --force
-
-      # Publish GitHub release
-      - name: Publish GitHub release
-        uses: softprops/action-gh-release@v1
+      # Push RPM to gh-pages branch
+      - name: Push RPM to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v6
         with:
-          tag_name: ${{ github.event.inputs.minio_release }}
-          name: MinIO RPM ${{ github.event.inputs.minio_release }}
-          body: "RPM package for MinIO ${{ github.event.inputs.minio_release }}"
-          files: output/*.rpm
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./output
+          publish_branch: gh-pages
+          destination_dir: ""
+          force_orphan: true
+          commit_message: "Add MinIO RPM ${{ github.event.inputs.minio_release }}"
+          user_name: github-actions
+          user_email: actions@github.com
