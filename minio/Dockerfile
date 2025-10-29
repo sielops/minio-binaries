@@ -18,6 +18,8 @@ RUN dnf install -y rpm-build sed && dnf clean all
 
 COPY --from=builder /src/minio/bin/minio /build/minio
 COPY minio.spec /build/minio.spec
+COPY minio.service /build/minio.service
+COPY minio.default /build/minio.default
 
 RUN RPM_VERSION=$(echo ${MINIO_RELEASE} \
                    | sed -E 's/^RELEASE\.//; s/T//; s/-//g; s/Z//') \
@@ -26,6 +28,8 @@ RUN RPM_VERSION=$(echo ${MINIO_RELEASE} \
 
 RUN mkdir -p rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS} \
     && cp /build/minio rpmbuild/SOURCES/ \
-    && cp /build/minio.spec rpmbuild/SPECS/
+    && cp /build/minio.spec rpmbuild/SPECS/ \
+    && cp /build/minio.service rpmbuild/SOURCES/ \
+    && cp /build/minio.default rpmbuild/SOURCES/
 
 RUN rpmbuild --define "_topdir $(pwd)/rpmbuild" -bb rpmbuild/SPECS/minio.spec
