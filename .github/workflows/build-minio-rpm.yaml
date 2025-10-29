@@ -1,0 +1,43 @@
+name: Build MinIO RPM
+
+on:
+  workflow_dispatch:
+    inputs:
+      minio_release:
+        description: 'MinIO release tag (e.g., RELEASE.2025-10-15T17-29-55Z)'
+        required: true
+
+jobs:
+  build-rpm:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Set release as an environment variable
+      - name: Set MinIO release
+        run: echo "MINIO_RELEASE=${{ github.event.inputs.minio_release }}" >> $GITHUB_ENV
+
+      # Build Docker image and package RPM
+      - name: Build RPM Docker image
+        run: |
+          docker buildx build --load \
+            --build-arg MINIO_RELEASE=${{ github.event.inputs.minio_release }} \
+            -t minio-rpm:latest .
+
+      # Create a temporary container to extract the RPM
+      - name: Extract RPM package
+        run: |
+          CONTAINER_ID=$(docker create minio-rpm:latest)
+          mkdir -p output
+          docker cp $CONTAINER_ID:/build/rpmbuild/RPMS/x86_64/ output/
+          docker rm $CONTAINER_ID
+
+      # Upload RPM as artifact
+      - name: Upload RPM artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: minio-rpm
+          path: output/*.rpm
