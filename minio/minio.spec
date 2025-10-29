@@ -31,13 +31,13 @@ getent group minio-user >/dev/null || groupadd -r minio-user
 getent passwd minio-user >/dev/null || useradd -r -g minio-user -s /sbin/nologin minio-user
 
 %post
-if [ $1 -eq 1 ] ; then
+if [ $1 -eq 1 ]; then
     systemctl daemon-reload >/dev/null 2>&1 || :
     systemctl enable minio.service >/dev/null 2>&1 || :
 fi
 
 %preun
-if [ $1 -eq 0 ] ; then
+if [ $1 -eq 0 ]; then
     systemctl --no-reload disable minio.service >/dev/null 2>&1 || :
     systemctl stop minio.service >/dev/null 2>&1 || :
 fi

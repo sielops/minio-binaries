@@ -7,7 +7,7 @@ RUN dnf install -y git golang && dnf clean all
 
 RUN git clone --branch $MINIO_RELEASE --depth 1 https://github.com/minio/minio.git /src/minio \
     && cd /src/minio \
-    && GOOS=linux GOARCH=amd64 go build -o bin/minio ./cmd
+    && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/minio .
 
 FROM rockylinux:9
 WORKDIR /build
@@ -16,7 +16,7 @@ ARG MINIO_RELEASE
 
 RUN dnf install -y rpm-build sed && dnf clean all
 
-COPY --from=builder /src/minio/bin/minio /build/
+COPY --from=builder /src/minio/bin/minio /build/minio
 COPY minio.spec minio.service minio.default /build/
 
 RUN RPM_VERSION=$(echo ${MINIO_RELEASE} \
