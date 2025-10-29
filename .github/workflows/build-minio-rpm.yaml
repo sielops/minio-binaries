@@ -10,13 +10,12 @@ on:
 jobs:
   build-rpm:
     runs-on: ubuntu-latest
-
     steps:
       # Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Set release as an environment variable
+      # Set MinIO release environment variable
       - name: Set MinIO release
         run: echo "MINIO_RELEASE=${{ github.event.inputs.minio_release }}" >> $GITHUB_ENV
 
@@ -29,7 +28,7 @@ jobs:
             -t minio-rpm:latest \
             minio/
 
-      # Create a temporary container to extract the RPM
+      # Create temporary container and copy RPM
       - name: Extract RPM package
         run: |
           CONTAINER_ID=$(docker create minio-rpm:latest)
@@ -37,9 +36,11 @@ jobs:
           docker cp $CONTAINER_ID:/build/rpmbuild/RPMS/x86_64/ output/
           docker rm $CONTAINER_ID
 
-      # Upload RPM as artifact
-      - name: Upload RPM artifact
-        uses: actions/upload-artifact@v4
+      # Upload to GitHub Release
+      - name: Create GitHub Release and upload RPM
+        uses: softprops/action-gh-release@v1
         with:
-          name: minio-rpm
-          path: output/**
+          files: output/*.rpm
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG_NAME: ${{ github.event.inputs.minio_release }}
