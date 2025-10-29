@@ -10,12 +10,13 @@ on:
 jobs:
   build-rpm:
     runs-on: ubuntu-latest
+
     steps:
       # Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Set MinIO release environment variable
+      # Set release as an environment variable
       - name: Set MinIO release
         run: echo "MINIO_RELEASE=${{ github.event.inputs.minio_release }}" >> $GITHUB_ENV
 
@@ -28,7 +29,7 @@ jobs:
             -t minio-rpm:latest \
             minio/
 
-      # Create temporary container and copy RPM
+      # Create a temporary container to extract the RPM
       - name: Extract RPM package
         run: |
           CONTAINER_ID=$(docker create minio-rpm:latest)
@@ -36,11 +37,21 @@ jobs:
           docker cp $CONTAINER_ID:/build/rpmbuild/RPMS/x86_64/ output/
           docker rm $CONTAINER_ID
 
-      # Upload to GitHub Release
-      - name: Create GitHub Release and upload RPM
+      # Create a Git tag for the MinIO release
+      - name: Create Git tag
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git tag -f ${{ github.event.inputs.minio_release }}
+          git push origin ${{ github.event.inputs.minio_release }} --force
+
+      # Publish GitHub release
+      - name: Publish GitHub release
         uses: softprops/action-gh-release@v1
         with:
+          tag_name: ${{ github.event.inputs.minio_release }}
+          name: MinIO RPM ${{ github.event.inputs.minio_release }}
+          body: "RPM package for MinIO ${{ github.event.inputs.minio_release }}"
           files: output/*.rpm
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAG_NAME: ${{ github.event.inputs.minio_release }}
