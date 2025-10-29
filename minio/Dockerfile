@@ -16,10 +16,8 @@ ARG MINIO_RELEASE
 
 RUN dnf install -y rpm-build sed && dnf clean all
 
-COPY --from=builder /src/minio/bin/minio /build/minio
-COPY minio.spec /build/minio.spec
-COPY minio.service /build/minio.service
-COPY minio.default /build/minio.default
+COPY --from=builder /src/minio/bin/minio /build/
+COPY minio.spec minio.service minio.default /build/
 
 RUN RPM_VERSION=$(echo ${MINIO_RELEASE} \
                    | sed -E 's/^RELEASE\.//; s/T//; s/-//g; s/Z//') \
