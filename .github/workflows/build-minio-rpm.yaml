@@ -24,8 +24,10 @@ jobs:
       - name: Build RPM Docker image
         run: |
           docker buildx build --load \
+            -f minio/Dockerfile \
             --build-arg MINIO_RELEASE=${{ github.event.inputs.minio_release }} \
-            -t minio-rpm:latest .
+            -t minio-rpm:latest \
+            minio/
 
       # Create a temporary container to extract the RPM
       - name: Extract RPM package
