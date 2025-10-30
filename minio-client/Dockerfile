@@ -16,7 +16,7 @@ ARG MC_RELEASE
 
 RUN dnf install -y rpm-build sed && dnf clean all
 
-COPY --from=builder /src/mc/bin/mc /build/
+COPY --from=builder /src/mc/bin/mc /build/mc
 COPY minio-client.spec /build/
 
 RUN RPM_VERSION=$(echo ${MC_RELEASE} \
