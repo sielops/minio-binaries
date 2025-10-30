@@ -1,10 +1,10 @@
-name: Build MinIO RPM
+name: Build MinIO Client (mc) RPM
 
 on:
   workflow_dispatch:
     inputs:
-      minio_release:
-        description: 'MinIO release tag (e.g., RELEASE.2025-10-15T17-29-55Z)'
+      mc_release:
+        description: 'MinIO Client release tag (e.g., RELEASE.2025-10-28T21-05-00Z)'
         required: true
 
 jobs:
@@ -15,20 +15,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set MinIO release
-        run: echo "MINIO_RELEASE=${{ github.event.inputs.minio_release }}" >> $GITHUB_ENV
+      - name: Set MC release
+        run: echo "MC_RELEASE=${{ github.event.inputs.mc_release }}" >> $GITHUB_ENV
 
       - name: Build RPM Docker image
         run: |
           docker buildx build --load \
-            -f minio/Dockerfile \
-            --build-arg MINIO_RELEASE=${{ github.event.inputs.minio_release }} \
-            -t minio-rpm:latest \
-            minio/
+            -f mc/Dockerfile \
+            --build-arg MC_RELEASE=${{ github.event.inputs.mc_release }} \
+            -t mc-rpm:latest \
+            mc/
 
       - name: Extract RPM package
         run: |
-          CONTAINER_ID=$(docker create minio-rpm:latest)
+          CONTAINER_ID=$(docker create mc-rpm:latest)
           mkdir -p output
           docker cp $CONTAINER_ID:/build/rpmbuild/RPMS/x86_64/ output/
           docker rm $CONTAINER_ID
@@ -40,6 +40,6 @@ jobs:
           publish_dir: ./output
           publish_branch: gh-pages
           destination_dir: ""
-          commit_message: "Add MinIO RPM ${{ github.event.inputs.minio_release }}"
+          commit_message: "Add MinIO Client RPM ${{ github.event.inputs.mc_release }}"
           user_name: github-actions
           user_email: actions@github.com
