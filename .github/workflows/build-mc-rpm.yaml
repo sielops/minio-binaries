@@ -43,3 +43,4 @@ jobs:
           commit_message: "Add MinIO Client RPM ${{ github.event.inputs.mc_release }}"
           user_name: github-actions
           user_email: actions@github.com
+          keep_files: true
