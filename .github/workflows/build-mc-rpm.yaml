@@ -24,7 +24,7 @@ jobs:
             -f minio-client/Dockerfile \
             --build-arg MC_RELEASE=${{ github.event.inputs.mc_release }} \
             -t mc-rpm:latest \
-            mc/
+            minio-client/
 
       - name: Extract RPM package
         run: |
